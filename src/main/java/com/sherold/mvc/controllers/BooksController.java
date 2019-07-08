@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.sherold.mvc.models.Book;
 import com.sherold.mvc.services.BookService;
@@ -52,7 +53,7 @@ public class BooksController {
 	// POST Route to CREATE a new book
 	@RequestMapping(value="/books", method=RequestMethod.POST)
 	// The @Valid annotation checks to see if the submitted object passed validation
-	// @BindingResult must come immediatly after the @Valid annotation parameter. This tells the application to check for errors!
+	// @BindingResult must come immediately after the @Valid annotation parameter. This tells the application to check for errors!
 	public String create(@Valid @ModelAttribute("book") Book book, BindingResult result) {
 		
 		// EventHandler for error checking
@@ -75,5 +76,48 @@ public class BooksController {
 		model.addAttribute("book", book);
 		
 		return "/books/show.jsp";
+	}
+	
+	// GET Route for edit book form
+	@RequestMapping("books/{id}/edit")
+	// PathVariable for query, Model to bind form data to view
+	public String edit(@PathVariable("id") Long id, Model model) {
+		// Queries DB for book to bind to form
+		Book book = bookService.findBook(id);
+		
+		// Binds book model to view through the model
+		model.addAttribute("book", book);
+		return "/books/edit.jsp";
+	}
+	
+	// PUT Route to UPDATE book by id
+	@RequestMapping(value="/books/{id}", method=RequestMethod.PUT)
+	// The @Valid annotation checks to see if the submitted object passed validation
+	// @BindingResult must come immediately after the @Valid annotation parameter. This tells the application to check for errors!
+	public String update(
+			@Valid 
+			@ModelAttribute("book") Book book, 
+			BindingResult result,
+			@PathVariable("id") Long id,
+			@RequestParam(value="title") String title, 
+			@RequestParam(value="description") String desc, 
+			@RequestParam(value="language") String lang, 
+			@RequestParam(value="numberOfPages") Integer numOfPages
+			) {
+		// EventHandler for error checking
+		if (result.hasErrors()) {
+			return "books/edit.jsp";
+		} else {
+			bookService.updateBook(id, title, desc, lang, numOfPages);
+			return "redirect:/books";
+		}
+	}
+	
+	// DELETE Route for book by id
+	@RequestMapping(value="/books/{id}", method=RequestMethod.DELETE)
+	public String destory(@PathVariable("id") Long id) {
+		// Queries and deletes book from PathVariable
+		bookService.deleteBook(id);;
+		return "redirect:/books";
 	}
 }
